@@ -2,65 +2,60 @@ package de.aschallenberg.gamelibrary.websocket;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.aschallenberg.gamelibrary.config.ConfigLoader;
+import de.aschallenberg.gamelibrary.data.BotData;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import lombok.extern.log4j.Log4j2;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 @Log4j2
 @UtilityClass
 public class MessageSender {
-    static final String GI_TOKEN_KEY = "gi_token";
-    static final String TYPE_KEY = "type";
-    static final String LOG_KEY = "log";
-    static final String RECIPIENTS_KEY = "recipients";
-    static final String GAME_DATA_KEY = "game_data";
+	static final String OBJECT_KEY = "object";
+	static final String TYPE_KEY = "type";
+	static final String RECIPIENTS_KEY = "recipients";
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    private static WebSocketHandler webSocketHandler;
+	private static WebSocketHandler webSocketHandler;
 
-    public static void sendGameData(@NonNull Map<String, Object> data, boolean logMessage, @NonNull List<UUID> recipients) {
-        sendData(MessageType.GAME_INTERNAL, data, logMessage, recipients);
-    }
+	public static void sendMessage(@NonNull MessageType type) {
+		sendMessage(Map.of(
+				TYPE_KEY, type
+		));
+	}
 
-    static void sendPlatformData(@NonNull MessageType type, Map<String, Object> data) {
-        sendData(type, data, false, null);
-    }
+	public static void sendMessage(@NonNull MessageType type, @NonNull Object object) {
+		sendMessage(Map.of(
+				TYPE_KEY, type,
+				OBJECT_KEY, object
+		));
+	}
 
-    static void sendData(MessageType type, Map<String, Object> gameData, boolean logMessage, List<UUID> recipients) {
-        Map<String, Object> data = new HashMap<>();
+	public static void sendMessage(@NonNull MessageType type, @NonNull Object object, @NonNull List<BotData> recipients) {
+		if (recipients.isEmpty()) {
+			throw new IllegalArgumentException("Bots cannot be empty");
+		}
 
-        data.put(TYPE_KEY, type.name());
-        data.put(GI_TOKEN_KEY, ConfigLoader.get("plattform.game.token"));
+		sendMessage(Map.of(
+				TYPE_KEY, type,
+				OBJECT_KEY, object,
+				RECIPIENTS_KEY, recipients
+		));
+	}
 
-        if (type == MessageType.GAME_INTERNAL) {
-            data.put(LOG_KEY, logMessage);
-            data.put(RECIPIENTS_KEY, recipients);
-            data.put(GAME_DATA_KEY, gameData);
-        }
+	private static void sendMessage(Map<String, Object> data) {
+		try {
+			webSocketHandler.send(OBJECT_MAPPER.writeValueAsString(data));
+			log.info("Sent [{}]: {}", data.get(TYPE_KEY), data);
+		} catch (JsonProcessingException e) {
+			throw new IllegalArgumentException("'object' could not be converted to JSON: " + e.getMessage(), e);
+		}
+	}
 
-        String dataString;
-        try {
-            dataString = OBJECT_MAPPER.writeValueAsString(data);
-        } catch (JsonProcessingException e) {
-            throw new IllegalArgumentException("'data' could not be converted to JSON: " + e.getMessage());
-        }
-
-        log.info("Sending data: {}", dataString);
-        webSocketHandler.send(dataString);
-    }
-
-    public static void sendFinished() {
-        sendPlatformData(MessageType.FINISHED, null);
-    }
-
-    static void setWebSocketHandler(WebSocketHandler webSocketHandler) {
-        MessageSender.webSocketHandler = webSocketHandler;
-    }
+	static void setWebSocketHandler(WebSocketHandler webSocketHandler) {
+		MessageSender.webSocketHandler = webSocketHandler;
+	}
 }

@@ -1,126 +1,106 @@
 package de.aschallenberg.gamelibrary;
 
 
-import de.aschallenberg.gamelibrary.game.Bot;
+import de.aschallenberg.gamelibrary.data.BotData;
 import de.aschallenberg.gamelibrary.game.Game;
+import de.aschallenberg.gamelibrary.modules.TicTacToe3x3;
+import de.aschallenberg.gamelibrary.modules.TicTacToe5x5;
+import de.aschallenberg.gamelibrary.modules.TicTacToeModule;
+import lombok.extern.log4j.Log4j2;
 
 import java.util.Map;
 
+@Log4j2
 public class TicTacToe extends Game {
-    int[] board = new int[9];
-    int currentBot = 0;
+	TicTacToeModule module;
+	private int[] board;
+	private int currentBotIndex;
 
-    int[][] winPatterns = {
-            {0, 1, 2}, {3, 4, 5}, {6, 7, 8}, // Reihen
-            {0, 3, 6}, {1, 4, 7}, {2, 5, 8}, // Spalten
-            {0, 4, 8}, {2, 4, 6}             // Diagonalen
-    };
 
-    @Override
-    public void onStartGame() {
-        sendMoveRequest();
-    }
+	@Override
+	public void onStartGame() {
+		if (getModule().equals("3x3")) {
+			module = new TicTacToe3x3();
+		} else if (getModule().equals("5x5")) {
+			module = new TicTacToe5x5();
+		} else {
+			throw new RuntimeException("Unknown module: " + getModule());
+		}
 
-    @Override
-    public void onDataReceived(Map<String, Object> data, Bot bot) {
-        if(isCurrentBot(bot)) {
-            if (data.get("type").equals("move_response")) {
-                int move = (int) data.get("move");
+		resetGame(); // Initialize board and currentBotIndex
+		sendMove();
+	}
 
-                if(board[move] != 0) {
-                    sendMoveRequest("Invalid move");
-                    return;
-                }
+	@Override
+	public synchronized void onMove(BotData sender, Object object) {
+		BotData currentBotData = getCurrentBot();
+		if (!currentBotData.equals(sender)) {
+			log.warn("current bot and sender do not match. Current bot: {}, Sender: {}", currentBotData, sender);
+			return;
+		}
+		int move = jsonObjectMapper.convertValue(object, Integer.class);
 
-                board[move] = currentBot + 1;
+		// Check if move valid.
+		int maxMove = board.length - 1;
+		if (move < 0 || move > maxMove || board[move] != 0) {
+			sendError("Invalid move! Move has to be a number between 0 and " + maxMove +
+					" (inclusive) and must index a empty field (0).", currentBotData);
+			sendMove();
+			return;
+		}
 
-                if(!handleGameState()) {
-                    currentBot = (currentBot + 1) % getBots().size();
-                    sendMoveRequest();
-                } else {
-                    sendGameFinished();
-                    reset();
-                }
-            }
-        }
-    }
+		board[move] = currentBotIndex + 1;
 
-    @Override
-    public void onInterruptGame() {
-        reset();
-    }
+		sendMessage(board, getBots()); // send current board to all bots
 
-    private void sendMoveRequest() {
-        sendData(Map.of(
-                "type", "move_request",
-                "board", board,
-                "player", currentBot + 1
-        ), true, getBots().get(currentBot));
-    }
+		Map<BotData, Integer> scores = checkForGameFinished();
 
-    private boolean isCurrentBot(Bot bot) {
-        return getBots().get(currentBot).equals(bot);
-    }
+		if (scores == null) { // Game is not finished
+			currentBotIndex = (currentBotIndex + 1) % 2;
+			sendMove();
+		} else { // Game is finished
+			sendFinished(scores);
+			resetGame();
+		}
+	}
 
-    private boolean handleGameState() {
-        int state = getGameState();
+	@Override
+	public void onMessageReceived(BotData sender, Object object) {
+		// Nothing to do here
+	}
 
-        return switch (state) {
-            case -1 -> false;
-            case 0 -> {
-                sendDraw();
-                yield true;
-            }
-            case 1, 2 -> {
-                sendWin();
-                yield true;
-            }
-            default -> throw new IllegalStateException("Unexpected value: " + state);
-        };
-    }
+	@Override
+	public void resetGame() {
+		board = new int[module.getBoardSize()];
+		currentBotIndex = 0;
+	}
 
-    private int getGameState() {
-        for (int cell : board) {
-            if (cell == 0) {
-                return -1; // game still running
-            }
-        }
+	private Map<BotData, Integer> checkForGameFinished() {
+		for (int cell : board) {
+			if (cell == 0) {
+				return null; // game still running
+			}
+		}
 
-        for (int[] pattern : winPatterns) {
-            if (board[pattern[0]] != 0 && board[pattern[0]] == board[pattern[1]] && board[pattern[1]] == board[pattern[2]]) {
-                return board[pattern[0]]; // 1 or 2 wins the game
-            }
-        }
+		for (int[] pattern : module.getWinPatterns()) {
+			if (board[pattern[0]] != 0 && board[pattern[0]] == board[pattern[1]] && board[pattern[1]] == board[pattern[2]]) {
+				int winnerIndex = board[pattern[0]];
 
-        return 0; // Draw
-    }
+				return Map.of(
+						getBots().get(winnerIndex), 2, // Winner gets 2 points
+						getBots().get((winnerIndex + 1) % 2), 0 // Loser gets 0 points
+				);
+			}
+		}
 
-    private void reset() {
-        board = new int[9];
-        currentBot = 0;
-        getBots().clear();
-    }
+		return Map.of(getBots().get(0), 1, getBots().get(1), 1); // Draw: both get 1 point
+	}
 
-    private void sendMoveRequest(String error) {
-        sendData(Map.of(
-                "type", "move_request",
-                "board", board,
-                "error", error
-        ), true, getBots().get(currentBot));
-    }
+	private BotData getCurrentBot() {
+		return getBots().get(currentBotIndex);
+	}
 
-    private void sendDraw() {
-        sendData(Map.of(
-                "type", "game_over",
-                "result", "draw"
-        ), true, getBots());
-    }
-
-    private void sendWin() {
-        sendData(Map.of(
-                "type", "game_over",
-                "result", "win",
-                "winner", getBots().get(currentBot).getToken()
-        ), true, getBots());
-    }
+	private void sendMove() {
+		super.sendMove(new Move(board, currentBotIndex), getCurrentBot());
+	}
 }
