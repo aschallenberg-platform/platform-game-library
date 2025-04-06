@@ -1,0 +1,15 @@
+This project uses the following third-party libraries:
+
+- Java-WebSocket (MIT License)
+  https://github.com/TooTallNate/Java-WebSocket
+
+- Project Lombok (MIT License)
+  https://projectlombok.org/
+
+- Apache Log4j (Apache License 2.0)
+  https://logging.apache.org/log4j/2.x/
+
+- Jackson Databind (Apache License 2.0)
+  https://github.com/FasterXML/jackson-databind
+
+For libraries under the Apache License 2.0, a copy of the license is included in this distribution.
