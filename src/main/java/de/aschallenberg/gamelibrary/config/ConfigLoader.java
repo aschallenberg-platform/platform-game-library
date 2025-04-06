@@ -6,21 +6,21 @@ import java.util.Properties;
 
 @Log4j2
 public class ConfigLoader {
-    private static final String CONFIG_FILE = "config.properties";
-    private static final Properties PROPERTIES = new Properties();
+	private static final String CONFIG_FILE = "config.properties";
+	private static final Properties PROPERTIES = new Properties();
 
-    private ConfigLoader() {}
+	private ConfigLoader() {}
 
-    public static void load() {
-        try {
-            PROPERTIES.load(ConfigLoader.class.getClassLoader().getResourceAsStream(CONFIG_FILE));
-            log.info("Loaded configuration from {}", CONFIG_FILE);
-        } catch (Exception e) {
-            log.error(e.getMessage());
-        }
-    }
+	public static void load() {
+		try {
+			PROPERTIES.load(ConfigLoader.class.getClassLoader().getResourceAsStream(CONFIG_FILE));
+			log.info("Loaded configuration from {}", CONFIG_FILE);
+		} catch (Exception e) {
+			log.error("Missing {} file. Please read the README.md!", CONFIG_FILE);
+		}
+	}
 
-    public static String get(String key) {
-        return PROPERTIES.getProperty(key);
-    }
+	public static String get(String key) {
+		return PROPERTIES.getProperty(key);
+	}
 }
