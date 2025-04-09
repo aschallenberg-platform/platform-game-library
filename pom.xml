@@ -19,7 +19,7 @@
         <repository>
             <id>github</id>
             <name>GitHub aschallenberg Apache Maven Packages</name>
-            <url>https://maven.pkg.github.com/aschallenberg/platform-game-library</url>
+            <url>https://maven.pkg.github.com/aschallenberg-platform/platform-game-library</url>
         </repository>
     </distributionManagement>
 
