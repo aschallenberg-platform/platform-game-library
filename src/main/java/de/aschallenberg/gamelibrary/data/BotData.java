@@ -6,7 +6,6 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
-import java.util.UUID;
 
 @Data
 @NoArgsConstructor
@@ -15,7 +14,6 @@ import java.util.UUID;
 public class BotData implements Serializable {
 
 	@EqualsAndHashCode.Include
-	private UUID token;
 	private String name;
 	private String ownerName;
 }

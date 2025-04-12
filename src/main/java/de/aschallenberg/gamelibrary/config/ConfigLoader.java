@@ -22,6 +22,23 @@ public class ConfigLoader {
 
 	private ConfigLoader() {}
 
+	/**
+	 * Loads the configuration from the `config.properties` file and overrides properties
+	 * based on the provided command-line arguments.
+	 * <p>
+	 * This method first attempts to load the configuration from the `config.properties` file.
+	 * If the file is missing, an error is logged. Then, it processes the command-line arguments
+	 * to override specific configuration properties.
+	 * </p>
+	 *
+	 * @param args Command-line arguments in the format `--key value`. Supported keys are:
+	 *             <ul>
+	 *                 <li>host: Overrides the platform host.</li>
+	 *                 <li>port: Overrides the platform port.</li>
+	 *                 <li>ssl: Enables or disables SSL for the platform.</li>
+	 *                 <li>token: Sets the game implementation token for the platform.</li>
+	 *             </ul>
+	 */
 	public static void load(String[] args) {
 		try {
 			PROPERTIES.load(ConfigLoader.class.getClassLoader().getResourceAsStream(CONFIG_FILE));
@@ -49,7 +66,6 @@ public class ConfigLoader {
 				String propertyKey = ARG_TO_PROPERTY_KEY.get(argKey);
 
 				log.info("Overriding property {} to {}", propertyKey, value);
-
 				PROPERTIES.setProperty(ARG_TO_PROPERTY_KEY.get(argKey), args[i + 1]);
 			}
 		}

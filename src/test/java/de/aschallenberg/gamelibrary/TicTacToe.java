@@ -19,9 +19,9 @@ public class TicTacToe extends Game {
 
 	@Override
 	public void onStartGame() {
-		if (getModule().equals("3x3")) {
+		if (getModule().equals("Klassisches 3x3 Feld für 2 Bots")) {
 			module = new TicTacToe3x3();
-		} else if (getModule().equals("5x5")) {
+		} else if (getModule().equals("Größeres 5x5 Feld für 2 Bots")) {
 			module = new TicTacToe5x5();
 		} else {
 			throw new RuntimeException("Unknown module: " + getModule());
