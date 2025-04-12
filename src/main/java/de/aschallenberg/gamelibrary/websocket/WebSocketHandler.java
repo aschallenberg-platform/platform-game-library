@@ -58,7 +58,12 @@ public final class WebSocketHandler extends WebSocketClient {
 			case FINISHED -> handleFinished();
 			case GAME_INTERNAL -> game.onMessageReceived(getSender(data), object);
 			case MOVE -> game.onMove(getSender(data), object);
+			case DISQUALIFY -> handleDisqualify();
 		}
+	}
+
+	private void handleDisqualify() {
+		log.warn(PLATFORM_MARKER, "Received DISQUALIFY message but only the game can send it.");
 	}
 
 	@Override
@@ -81,7 +86,7 @@ public final class WebSocketHandler extends WebSocketClient {
 	}
 
 	private void handleFinished() {
-		// If the game receives a FINISHED, it's irrelevant
+		log.warn(PLATFORM_MARKER, "Received FINISHED message but only the game can send it.");
 	}
 
 	private BotData getSender(Map<String, Object> data) {

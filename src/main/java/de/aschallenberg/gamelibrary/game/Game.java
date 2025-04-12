@@ -141,6 +141,21 @@ public abstract class Game {
 	}
 
 	/**
+	 * Disqualifies a bot from the game.
+	 * <p>
+	 * This method removes the specified bot from the list of participating bots. If the bot is successfully removed,
+	 * a message of type DISQUALIFY is sent to the platform to notify it of the disqualification.
+	 * </p>
+	 *
+	 * @param botData The bot to be disqualified.
+	 */
+	protected void disqualify(BotData botData) {
+		if (bots.remove(botData)) {
+			MessageSender.sendMessage(MessageType.DISQUALIFY, botData);
+		}
+	}
+
+	/**
 	 * Sends a move message to a single bot.
 	 * <p>
 	 * This method sends a message of type MOVE to the platform, including the specified object and bot.

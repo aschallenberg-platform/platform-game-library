@@ -43,9 +43,7 @@ public class TicTacToe extends Game {
 		// Check if move valid.
 		int maxMove = board.length - 1;
 		if (move < 0 || move > maxMove || board[move] != 0) {
-			sendError("Invalid move! Move has to be a number between 0 and " + maxMove +
-					" (inclusive) and must index a empty field (0).", currentBotData);
-			sendMove();
+			disqualify(currentBotData);
 			return;
 		}
 
@@ -67,6 +65,20 @@ public class TicTacToe extends Game {
 	@Override
 	public void onMessageReceived(BotData sender, Object object) {
 		// Nothing to do here
+	}
+
+	@Override
+	protected void disqualify(final BotData botData) {
+		super.disqualify(botData);
+
+		BotData firstBot = getBots().get(0);
+		BotData other = firstBot.equals(botData) ? getBots().get(1) : firstBot;
+
+		sendFinished(Map.of(
+				botData, 0,
+				other, 2
+		));
+		resetGame();
 	}
 
 	@Override
