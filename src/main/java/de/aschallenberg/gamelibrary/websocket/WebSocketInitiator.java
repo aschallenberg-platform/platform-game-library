@@ -29,25 +29,14 @@ public class WebSocketInitiator {
 	 * </p>
 	 */
 	public static void initConnection() {
-		initConnection(true);
-	}
-
-	public static void initConnection(boolean interruptOnFailure) {
-		ConfigLoader.load();
-
 		WebSocketHandler client = new WebSocketHandler(getWsUri());
 		MessageSender.setWebSocketHandler(client);
 
 		try {
-			// Establish connection synchronously
-			client.connectBlocking();
+			client.connectBlocking(); // Establish connection synchronously
 		} catch (InterruptedException e) {
-			if (interruptOnFailure) {
-				log.warn(e.getMessage());
-				System.exit(1);
-			} else {
-				log.warn("Cannot connect to the platform");
-			}
+			log.warn(e.getMessage());
+			System.exit(1);
 		}
 	}
 

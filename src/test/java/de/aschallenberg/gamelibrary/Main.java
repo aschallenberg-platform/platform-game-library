@@ -1,6 +1,7 @@
 package de.aschallenberg.gamelibrary;
 
 
+import de.aschallenberg.gamelibrary.config.ConfigLoader;
 import de.aschallenberg.gamelibrary.game.GameRegisty;
 import de.aschallenberg.gamelibrary.websocket.WebSocketInitiator;
 
@@ -12,10 +13,11 @@ public class Main {
 	 * Mit WebSocketInitiator.initConnection() baust du die WebSocket Verbindung zur Plattform auf. Stelle sicher,
 	 * dass deine config.properties korrekt konfiguriert ist, bevor die Verbindung aufgebaut wird.
 	 *
-	 * @param args Command line Arguments, aber die sind uns hier erstmal egal.
+	 * @param args Command line Arguments, die ggf. die config.properties überschreiben.
 	 */
 	public static void main(String[] args) {
 		GameRegisty.setGameClass(TicTacToe.class);
+		ConfigLoader.load(args);
 		WebSocketInitiator.initConnection();
 	}
 }
