@@ -53,17 +53,13 @@ public final class WebSocketHandler extends WebSocketClient {
 			case ERROR -> handleError(OBJECT_MAPPER.convertValue(object, String.class));
 			case BOT_CLIENT_DISCONNECTED -> game.onBotDisconnected(OBJECT_MAPPER.convertValue(object, BotData.class));
 			case REGISTER -> log.info(PLATFORM_MARKER, "Successfully registered");
-			case START -> handleGameStart(OBJECT_MAPPER.convertValue(object, GameData.class));
-			case INTERRUPT -> game.onInterruptGame();
-			case FINISHED -> handleFinished();
+			case GAME_START -> handleGameStart(OBJECT_MAPPER.convertValue(object, GameData.class));
+			case LOBBY_INTERRUPT, GAME_INTERRUPT -> game.onInterruptGame();
 			case GAME_INTERNAL -> game.onMessageReceived(getSender(data), object);
 			case MOVE -> game.onMove(getSender(data), object);
-			case DISQUALIFY -> handleDisqualify();
+			case DISQUALIFY, GAME_FINISHED, LOBBY_FINISHED, LOBBY_START ->
+					log.warn(PLATFORM_MARKER, "Received a irrelevant message: {}", message);
 		}
-	}
-
-	private void handleDisqualify() {
-		log.warn(PLATFORM_MARKER, "Received DISQUALIFY message but only the game can send it.");
 	}
 
 	@Override
@@ -83,10 +79,6 @@ public final class WebSocketHandler extends WebSocketClient {
 
 	private void handleGameStart(GameData dto) {
 		game.onStartGame(dto.getBots(), dto.getModule(), dto.getVersion(), dto.getSettings());
-	}
-
-	private void handleFinished() {
-		log.warn(PLATFORM_MARKER, "Received FINISHED message but only the game can send it.");
 	}
 
 	private BotData getSender(Map<String, Object> data) {

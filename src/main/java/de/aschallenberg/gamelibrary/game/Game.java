@@ -114,7 +114,7 @@ public abstract class Game {
 	 */
 	public void onBotDisconnected(BotData botData) {
 		resetGame();
-		MessageSender.sendMessage(MessageType.INTERRUPT);
+		MessageSender.sendMessage(MessageType.GAME_INTERRUPT);
 	}
 
 	/**
@@ -136,7 +136,7 @@ public abstract class Game {
 			}
 		});
 
-		MessageSender.sendMessage(MessageType.FINISHED, scoresMap);
+		MessageSender.sendMessage(MessageType.GAME_FINISHED, scoresMap);
 		resetGame();
 	}
 
