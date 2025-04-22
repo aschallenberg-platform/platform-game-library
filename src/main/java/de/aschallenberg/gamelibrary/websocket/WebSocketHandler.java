@@ -6,7 +6,7 @@ import de.aschallenberg.gamelibrary.config.ConfigLoader;
 import de.aschallenberg.gamelibrary.data.BotData;
 import de.aschallenberg.gamelibrary.data.GameData;
 import de.aschallenberg.gamelibrary.game.Game;
-import de.aschallenberg.gamelibrary.game.GameRegisty;
+import de.aschallenberg.gamelibrary.game.GameRegistry;
 import lombok.extern.log4j.Log4j2;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
@@ -21,8 +21,7 @@ public final class WebSocketHandler extends WebSocketClient {
 	private static final Marker PLATFORM_MARKER = MarkerManager.getMarker("Platform");
 	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-
-	private final Game game = GameRegisty.instantiateGame();
+	private final Game game = GameRegistry.instantiateGame();
 
 	public WebSocketHandler(URI serverUri) {
 		super(serverUri);
@@ -57,8 +56,8 @@ public final class WebSocketHandler extends WebSocketClient {
 			case LOBBY_INTERRUPT, GAME_INTERRUPT -> game.onInterruptGame();
 			case GAME_INTERNAL -> game.onMessageReceived(getSender(data), object);
 			case MOVE -> game.onMove(getSender(data), object);
-			case DISQUALIFY, GAME_FINISHED, LOBBY_FINISHED, LOBBY_START ->
-					log.warn(PLATFORM_MARKER, "Received a irrelevant message: {}", message);
+			case DISQUALIFY, GAME_FINISHED, LOBBY_FINISHED, LOBBY_START, STAGE_FINISHED, STAGE_START ->
+					log.info(PLATFORM_MARKER, "Received a irrelevant message: {}", message);
 		}
 	}
 

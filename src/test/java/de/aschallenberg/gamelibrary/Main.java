@@ -2,7 +2,7 @@ package de.aschallenberg.gamelibrary;
 
 
 import de.aschallenberg.gamelibrary.config.ConfigLoader;
-import de.aschallenberg.gamelibrary.game.GameRegisty;
+import de.aschallenberg.gamelibrary.game.GameRegistry;
 import de.aschallenberg.gamelibrary.websocket.WebSocketInitiator;
 
 public class Main {
@@ -16,7 +16,7 @@ public class Main {
 	 * @param args Command line Arguments, die ggf. die config.properties überschreiben.
 	 */
 	public static void main(String[] args) {
-		GameRegisty.setGameClass(TicTacToe.class);
+		GameRegistry.setGameClass(TicTacToe.class);
 		ConfigLoader.load(args);
 		WebSocketInitiator.initConnection();
 	}
