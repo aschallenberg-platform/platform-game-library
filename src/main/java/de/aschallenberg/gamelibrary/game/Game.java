@@ -108,7 +108,7 @@ public abstract class Game {
 
 	/**
 	 * Called when a Bot of this game disconnected. By default, the game will be reset.
-	 * This methode can be overridden to implement a better bot disconnect handling.
+	 * This method can be overridden to implement a better bot disconnect handling.
 	 *
 	 * @param botData The Bot that disconnected
 	 */

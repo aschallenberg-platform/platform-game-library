@@ -69,10 +69,10 @@ public class TicTacToe extends Game {
 
 	@Override
 	protected void disqualify(final BotData botData) {
-		super.disqualify(botData);
-
 		BotData firstBot = getBots().get(0);
 		BotData other = firstBot.equals(botData) ? getBots().get(1) : firstBot;
+
+		super.disqualify(botData);
 
 		sendFinished(Map.of(
 				botData, 0,
