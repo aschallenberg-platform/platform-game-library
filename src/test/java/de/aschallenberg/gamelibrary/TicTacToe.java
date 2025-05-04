@@ -6,14 +6,13 @@ import de.aschallenberg.gamelibrary.modules.TicTacToe3x3;
 import de.aschallenberg.gamelibrary.modules.TicTacToe5x5;
 import de.aschallenberg.gamelibrary.modules.TicTacToeModule;
 import de.aschallenberg.middleware.dto.BotData;
-import de.aschallenberg.middleware.messages.payloads.GameUpdatePayload;
 import lombok.extern.log4j.Log4j2;
 
 import java.util.List;
 import java.util.Map;
 
 @Log4j2
-public class TicTacToe extends Game<Integer, Move> {
+public class TicTacToe extends Game {
 	TicTacToeModule module;
 	private int[] board;
 	private int currentBotIndex;
@@ -36,7 +35,10 @@ public class TicTacToe extends Game<Integer, Move> {
 	}
 
 	@Override
-	public void onMoveReceived(final de.aschallenberg.middleware.dto.BotData sender, final Integer move) {
+	public void onMoveReceived(final de.aschallenberg.middleware.dto.BotData sender, final Object moveObject) {
+		System.out.println(moveObject);
+		int move = jsonObjectMapper.convertValue(moveObject, Integer.class);
+
 		BotData currentBotData = getCurrentBot();
 		if (!currentBotData.equals(sender)) {
 			log.warn("current bot and sender do not match. Current bot: {}, Sender: {}", currentBotData, sender);
@@ -66,7 +68,7 @@ public class TicTacToe extends Game<Integer, Move> {
 	}
 
 	@Override
-	public void onGameUpdateReceived(final de.aschallenberg.middleware.dto.BotData sender, final GameUpdatePayload payload) {
+	public void onGameUpdateReceived(final de.aschallenberg.middleware.dto.BotData sender, final Object gameUpdateData) {
 		// Nothing to do here
 	}
 
@@ -106,8 +108,8 @@ public class TicTacToe extends Game<Integer, Move> {
 				int winnerIndex = board[pattern[0]];
 
 				return Map.of(
-						bots.get(winnerIndex), 2, // Winner gets 2 points
-						bots.get((winnerIndex + 1) % 2), 0 // Loser gets 0 points
+						bots.get(winnerIndex - 1), 2, // Winner gets 2 points
+						bots.get((winnerIndex) % 2), 0 // Loser gets 0 points
 				);
 			}
 		}

@@ -23,10 +23,6 @@ public class MessageSender {
 		sendMessage(MessageFactory.createMessage(payload));
 	}
 
-	public static void sendMessage(@NonNull Payload payload, BotData sender) {
-		sendMessage(MessageFactory.createMessage(payload, sender));
-	}
-
 	public static void sendMessage(@NonNull Payload payload, List<BotData> recipients) {
 		sendMessage(MessageFactory.createMessage(payload, recipients));
 	}

@@ -19,11 +19,8 @@ import java.util.Map;
  * <p>
  * This class serves as a base for all game implementations. It defines the structure and methods that must be
  * implemented by any specific game.
- *
- * @param <MB> the type of move received from a bot.
- * @param <MG> the type of move sent from this game to a bot
  */
-public abstract class Game<MB, MG> {
+public abstract class Game {
 	private static final Logger log = LogManager.getLogger(Game.class);
 	/**
 	 * JSON object mapper used for converting objects to and from JSON for sending them to the platform and the game.
@@ -60,7 +57,7 @@ public abstract class Game<MB, MG> {
 	 * @param sender The bot that made the move.
 	 * @param move   The move.
 	 */
-	public abstract void onMoveReceived(BotData sender, MB move);
+	public abstract void onMoveReceived(BotData sender, Object move);
 
 	/**
 	 * Called when the platform forwards an update message from a bot to this game. This method is used to handle any
@@ -71,10 +68,10 @@ public abstract class Game<MB, MG> {
 	 * {@code jsonObjectMapper.convertValue(object, YourDTO.class)}
 	 * </p>
 	 *
-	 * @param sender  The Bot that sent the message
-	 * @param payload The payload including the game update data.
+	 * @param sender         The Bot that sent the message
+	 * @param gameUpdateData The game update data.
 	 */
-	public abstract void onGameUpdateReceived(BotData sender, GameUpdatePayload<?> payload);
+	public abstract void onGameUpdateReceived(BotData sender, Object gameUpdateData);
 
 	/**
 	 * Handles the reception of self-created messages from a bot.
@@ -155,7 +152,7 @@ public abstract class Game<MB, MG> {
 	 * @param move      The object representing the move.
 	 * @param recipient The bot to which the move message will be sent.
 	 */
-	protected void sendMove(MG move, BotData recipient) {
+	protected void sendMove(Object move, BotData recipient) {
 		MessageSender.sendMessage(new MovePayload<>(move), List.of(recipient));
 	}
 

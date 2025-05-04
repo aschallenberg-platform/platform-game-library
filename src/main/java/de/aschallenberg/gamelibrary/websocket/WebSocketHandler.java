@@ -48,7 +48,7 @@ public final class WebSocketHandler extends WebSocketClient {
 			message = mapper.readValue(messageString, Message.class);
 		} catch (final JsonProcessingException e) {
 			log.warn(PLATFORM_MARKER, "Could not parse message: {}", e.getMessage());
-			MessageSender.sendMessage(new ErrorPayload("Invalid JSON format: " + e.getMessage()));
+			error("Invalid JSON format: " + e.getMessage());
 			return;
 		}
 
@@ -93,18 +93,18 @@ public final class WebSocketHandler extends WebSocketClient {
 		System.exit(2);
 	}
 
-	private void handleRegisterResponse(
-			@NonNull final Message message,
-			@NonNull final RegisterResponsePayload payload
-	) {
-		log.info(PLATFORM_MARKER, "Successfully registered");
-	}
-
 	private void handleBotClientDisconnected(
 			@NonNull final Message message,
 			@NonNull final BotClientDisconnectPayload payload
 	) {
 		game.onBotDisconnected(payload.getDisconnectedBot());
+	}
+
+	private void handleRegisterResponse(
+			@NonNull final Message message,
+			@NonNull final RegisterResponsePayload payload
+	) {
+		log.info(PLATFORM_MARKER, "Successfully registered");
 	}
 
 	private void handleGameStart(
@@ -127,7 +127,7 @@ public final class WebSocketHandler extends WebSocketClient {
 	) {
 		BotData sender = getSender(message);
 		if (sender != null) {
-			game.onGameUpdateReceived(sender, payload);
+			game.onGameUpdateReceived(sender, payload.getValue());
 		}
 	}
 
@@ -137,7 +137,7 @@ public final class WebSocketHandler extends WebSocketClient {
 	) {
 		BotData sender = getSender(message);
 		if (sender != null) {
-			game.onMoveReceived(sender, payload);
+			game.onMoveReceived(sender, payload.getValue());
 		}
 	}
 
@@ -158,8 +158,15 @@ public final class WebSocketHandler extends WebSocketClient {
 			}
 		}
 
-		MessageSender.sendMessage(new ErrorPayload("Needed a sender but no sender was provided."));
+
+		error("Needed a sender but no sender was provided.");
 		return null;
+	}
+
+	private void error(String errorMessage) {
+		MessageSender.sendMessage(new ErrorPayload(errorMessage));
+		MessageSender.sendMessage(new GameInterruptPayload());
+		game.onInterruptGame();
 	}
 
 	private void ignore() {}
