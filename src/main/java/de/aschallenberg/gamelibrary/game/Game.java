@@ -1,14 +1,16 @@
 package de.aschallenberg.gamelibrary.game;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.aschallenberg.gamelibrary.data.BotData;
 import de.aschallenberg.gamelibrary.websocket.MessageSender;
-import de.aschallenberg.gamelibrary.websocket.MessageType;
+import de.aschallenberg.middleware.dto.BotData;
+import de.aschallenberg.middleware.dto.GameData;
+import de.aschallenberg.middleware.messages.Payload;
+import de.aschallenberg.middleware.messages.payloads.*;
 import lombok.Getter;
 import lombok.NonNull;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -17,8 +19,12 @@ import java.util.Map;
  * <p>
  * This class serves as a base for all game implementations. It defines the structure and methods that must be
  * implemented by any specific game.
+ *
+ * @param <MB> the type of move received from a bot.
+ * @param <MG> the type of move sent from this game to a bot
  */
-public abstract class Game {
+public abstract class Game<MB, MG> {
+	private static final Logger log = LogManager.getLogger(Game.class);
 	/**
 	 * JSON object mapper used for converting objects to and from JSON for sending them to the platform and the game.
 	 */
@@ -28,36 +34,15 @@ public abstract class Game {
 	 * List of
 	 */
 	@Getter
-	private List<BotData> bots;
-
-	/**
-	 * Module name of the game.
-	 */
-	@Getter
-	private String module;
-
-	/**
-	 * Version of the game.
-	 */
-	@Getter
-	private String version;
-
-	/**
-	 * Settings for the game.
-	 */
-	@Getter
-	private Map<String, ?> settings;
+	private GameData gameData;
 
 	/**
 	 * Called when the platform signals that the game should start.
 	 *
-	 * @param botData A list of bots that will participate in the game.
+	 * @param gameData The game data with the necessary information for this game run
 	 */
-	public final void onStartGame(List<BotData> botData, String module, String version, Map<String, ?> settings) {
-		this.bots = botData;
-		this.module = module;
-		this.version = version;
-		this.settings = settings;
+	public final void onStartGame(GameData gameData) {
+		this.gameData = gameData;
 		onStartGame();
 	}
 
@@ -73,22 +58,37 @@ public abstract class Game {
 	 * </p>
 	 *
 	 * @param sender The bot that made the move.
-	 * @param object The object representing the move.
+	 * @param move   The move.
 	 */
-	public abstract void onMove(BotData sender, Object object);
+	public abstract void onMoveReceived(BotData sender, MB move);
 
 	/**
-	 * Called when the platform sends other data to the game. This method is used to handle incoming data that is not
-	 * assigned to a specific action, such as move or start. The simplest way to handle the object is to implement a
+	 * Called when the platform forwards an update message from a bot to this game. This method is used to handle any
+	 * incoming data for actions that are not a move or start.
+	 * The simplest way to handle the object is to implement a
 	 * Data Transfer Object (DTO) class and parse it using the jsonObjectMapper as follows:
 	 * <p>
 	 * {@code jsonObjectMapper.convertValue(object, YourDTO.class)}
 	 * </p>
 	 *
-	 * @param sender The Bot that sent the message
-	 * @param object The Object with the data.
+	 * @param sender  The Bot that sent the message
+	 * @param payload The payload including the game update data.
 	 */
-	public abstract void onMessageReceived(BotData sender, Object object);
+	public abstract void onGameUpdateReceived(BotData sender, GameUpdatePayload<?> payload);
+
+	/**
+	 * Handles the reception of self-created messages from a bot.
+	 * <p>
+	 * Self-created messages must be described in the game description on the platform, otherwise bots are not able to
+	 * implement these. The platform cannot check them. They are only for communication between bots and this game.
+	 * </p>
+	 *
+	 * @param sender  The bot that sent the unknown message.
+	 * @param payload The payload of the unknown message.
+	 */
+	public void onOtherMessageReceived(BotData sender, Payload payload) {
+		log.warn("Received unknown message from {}: {}", sender, payload.getClass().getSimpleName());
+	}
 
 	/**
 	 * Resets the game to its initial state.
@@ -114,7 +114,7 @@ public abstract class Game {
 	 */
 	public void onBotDisconnected(BotData botData) {
 		resetGame();
-		MessageSender.sendMessage(MessageType.GAME_INTERRUPT);
+		MessageSender.sendMessage(new GameInterruptPayload());
 	}
 
 	/**
@@ -127,16 +127,7 @@ public abstract class Game {
 	 * @param scores A map containing the bots and their corresponding scores.
 	 */
 	protected void sendFinished(Map<BotData, Integer> scores) {
-		Map<String, Integer> scoresMap = new HashMap<>();
-		scores.entrySet().forEach(entry -> {
-			try {
-				scoresMap.put(jsonObjectMapper.writeValueAsString(entry.getKey()), entry.getValue());
-			} catch (JsonProcessingException e) {
-				throw new RuntimeException(e);
-			}
-		});
-
-		MessageSender.sendMessage(MessageType.GAME_FINISHED, scoresMap);
+		MessageSender.sendMessage(new GameFinishedPayload(scores));
 		resetGame();
 	}
 
@@ -150,8 +141,8 @@ public abstract class Game {
 	 * @param botData The bot to be disqualified.
 	 */
 	protected void disqualify(BotData botData) {
-		if (bots.remove(botData)) {
-			MessageSender.sendMessage(MessageType.DISQUALIFY, botData);
+		if (gameData.getBots().remove(botData)) {
+			MessageSender.sendMessage(new DisqualifyPayload(botData));
 		}
 	}
 
@@ -161,52 +152,47 @@ public abstract class Game {
 	 * This method sends a message of type MOVE to the platform, including the specified object and bot.
 	 * </p>
 	 *
-	 * @param object   The object representing the move.
-	 * @param receiver The bot to which the move message will be sent.
+	 * @param move      The object representing the move.
+	 * @param recipient The bot to which the move message will be sent.
 	 */
-	protected void sendMove(Object object, BotData receiver) {
-		MessageSender.sendMessage(MessageType.MOVE, object, List.of(receiver));
+	protected void sendMove(MG move, BotData recipient) {
+		MessageSender.sendMessage(new MovePayload<>(move), List.of(recipient));
 	}
 
 	/**
-	 * Sends a message to the specified list of bots.
 	 * <p>
-	 * This method sends a message of type GAME_INTERNAL to the platform, including the specified object and list of bots.
-	 * It also logs the message if the logMessage parameter is true.
+	 * This method sends a game update message to a list of bots (via the platform).
 	 * </p>
 	 *
-	 * @param object     The object to be sent in the message.
+	 * @param gameUpdate The game update to be sent in the message.
 	 * @param recipients The list of bots to which the message will be sent.
 	 */
-	protected final void sendMessage(@NonNull Object object, @NonNull List<BotData> recipients) {
-		MessageSender.sendMessage(MessageType.GAME_INTERNAL, object, recipients);
+	protected final void sendGameUpdate(@NonNull Object gameUpdate, @NonNull List<BotData> recipients) {
+		MessageSender.sendMessage(new GameUpdatePayload<>(gameUpdate), recipients);
 	}
 
 	/**
-	 * Sends a message to a single bot.
 	 * <p>
-	 * This method sends a message of type GAME_INTERNAL, that specifies game internal messages (for bots) to the
-	 * platform, including the specified object (data) and bot.
-	 * It also logs the message on the platform if the logMessage parameter is true.
+	 * This method sends a game update message to a single bot (via the platform).
 	 * </p>
 	 *
-	 * @param object     The object to be sent in the message.
-	 * @param recipients The bot to which the message will be sent.
+	 * @param gameUpdate The game update to be sent in the message.
+	 * @param recipient  The bot to which the message will be sent.
 	 */
-	protected final void sendMessage(@NonNull Object object, @NonNull BotData recipients) {
-		sendMessage(object, List.of(recipients));
+	protected final void sendGameUpdate(@NonNull Object gameUpdate, @NonNull BotData recipient) {
+		sendGameUpdate(gameUpdate, List.of(recipient));
 	}
 
 	/**
 	 * Sends an error message to a single bot.
 	 * <p>
-	 * This method sends a message of type ERROR to the platform, including the specified error message and bot.
+	 * This method sends an error message to a specific bot (via the platform).
 	 * </p>
 	 *
 	 * @param errorMessage The error message to be sent.
-	 * @param recipients   The bot to which the error message will be sent.
+	 * @param recipient    The bot to which the error message will be sent.
 	 */
-	protected final void sendError(@NonNull String errorMessage, @NonNull BotData recipients) {
-		MessageSender.sendMessage(MessageType.ERROR, errorMessage, List.of(recipients));
+	protected final void sendError(@NonNull String errorMessage, @NonNull BotData recipient) {
+		MessageSender.sendMessage(new ErrorPayload(errorMessage), List.of(recipient));
 	}
 }

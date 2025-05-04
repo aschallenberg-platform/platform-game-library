@@ -1,17 +1,19 @@
 package de.aschallenberg.gamelibrary;
 
 
-import de.aschallenberg.gamelibrary.data.BotData;
 import de.aschallenberg.gamelibrary.game.Game;
 import de.aschallenberg.gamelibrary.modules.TicTacToe3x3;
 import de.aschallenberg.gamelibrary.modules.TicTacToe5x5;
 import de.aschallenberg.gamelibrary.modules.TicTacToeModule;
+import de.aschallenberg.middleware.dto.BotData;
+import de.aschallenberg.middleware.messages.payloads.GameUpdatePayload;
 import lombok.extern.log4j.Log4j2;
 
+import java.util.List;
 import java.util.Map;
 
 @Log4j2
-public class TicTacToe extends Game {
+public class TicTacToe extends Game<Integer, Move> {
 	TicTacToeModule module;
 	private int[] board;
 	private int currentBotIndex;
@@ -19,12 +21,14 @@ public class TicTacToe extends Game {
 
 	@Override
 	public void onStartGame() {
-		if (getModule().equals("Klassisches 3x3 Feld für 2 Bots")) {
+		String moduleString = getGameData().getModule();
+
+		if (moduleString.equals("Klassisches 3x3 Feld für 2 Bots")) {
 			module = new TicTacToe3x3();
-		} else if (getModule().equals("Größeres 5x5 Feld für 2 Bots")) {
+		} else if (moduleString.equals("Größeres 5x5 Feld für 2 Bots")) {
 			module = new TicTacToe5x5();
 		} else {
-			throw new RuntimeException("Unknown module: " + getModule());
+			throw new RuntimeException("Unknown module: " + moduleString);
 		}
 
 		resetGame(); // Initialize board and currentBotIndex
@@ -32,13 +36,12 @@ public class TicTacToe extends Game {
 	}
 
 	@Override
-	public synchronized void onMove(BotData sender, Object object) {
+	public void onMoveReceived(final de.aschallenberg.middleware.dto.BotData sender, final Integer move) {
 		BotData currentBotData = getCurrentBot();
 		if (!currentBotData.equals(sender)) {
 			log.warn("current bot and sender do not match. Current bot: {}, Sender: {}", currentBotData, sender);
 			return;
 		}
-		int move = jsonObjectMapper.convertValue(object, Integer.class);
 
 		// Check if move valid.
 		int maxMove = board.length - 1;
@@ -49,7 +52,7 @@ public class TicTacToe extends Game {
 
 		board[move] = currentBotIndex + 1;
 
-		sendMessage(board, getBots()); // send current board to all bots
+		sendGameUpdate(board, getGameData().getBots()); // send current board to all bots
 
 		Map<BotData, Integer> scores = checkForGameFinished();
 
@@ -63,14 +66,16 @@ public class TicTacToe extends Game {
 	}
 
 	@Override
-	public void onMessageReceived(BotData sender, Object object) {
+	public void onGameUpdateReceived(final de.aschallenberg.middleware.dto.BotData sender, final GameUpdatePayload payload) {
 		// Nothing to do here
 	}
 
 	@Override
 	protected void disqualify(final BotData botData) {
-		BotData firstBot = getBots().get(0);
-		BotData other = firstBot.equals(botData) ? getBots().get(1) : firstBot;
+		List<BotData> bots = getGameData().getBots();
+
+		BotData firstBot = bots.get(0);
+		BotData other = firstBot.equals(botData) ? bots.get(1) : firstBot;
 
 		super.disqualify(botData);
 
@@ -94,22 +99,24 @@ public class TicTacToe extends Game {
 			}
 		}
 
+		List<BotData> bots = getGameData().getBots();
+
 		for (int[] pattern : module.getWinPatterns()) {
 			if (board[pattern[0]] != 0 && board[pattern[0]] == board[pattern[1]] && board[pattern[1]] == board[pattern[2]]) {
 				int winnerIndex = board[pattern[0]];
 
 				return Map.of(
-						getBots().get(winnerIndex), 2, // Winner gets 2 points
-						getBots().get((winnerIndex + 1) % 2), 0 // Loser gets 0 points
+						bots.get(winnerIndex), 2, // Winner gets 2 points
+						bots.get((winnerIndex + 1) % 2), 0 // Loser gets 0 points
 				);
 			}
 		}
 
-		return Map.of(getBots().get(0), 1, getBots().get(1), 1); // Draw: both get 1 point
+		return Map.of(bots.get(0), 1, bots.get(1), 1); // Draw: both get 1 point
 	}
 
 	private BotData getCurrentBot() {
-		return getBots().get(currentBotIndex);
+		return getGameData().getBots().get(currentBotIndex);
 	}
 
 	private void sendMove() {
