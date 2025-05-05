@@ -181,6 +181,18 @@ public abstract class Game {
 	}
 
 	/**
+	 * Sends a log message to the platform. The platform will log this and show it in the user's statistics.
+	 * <p>
+	 * Logs are important to understand the game flow. For example, log every move or a board status.
+	 * </p>
+	 *
+	 * @param logMessage
+	 */
+	protected final void sendLog(@NonNull String logMessage) {
+		MessageSender.sendMessage(new LogPayload(logMessage));
+	}
+
+	/**
 	 * Sends an error message to a single bot.
 	 * <p>
 	 * This method sends an error message to a specific bot (via the platform).

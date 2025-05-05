@@ -8,6 +8,7 @@ import de.aschallenberg.gamelibrary.modules.TicTacToeModule;
 import de.aschallenberg.middleware.dto.BotData;
 import lombok.extern.log4j.Log4j2;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -31,6 +32,7 @@ public class TicTacToe extends Game {
 		}
 
 		resetGame(); // Initialize board and currentBotIndex
+		logInit();
 		sendMove();
 	}
 
@@ -53,6 +55,7 @@ public class TicTacToe extends Game {
 
 		board[move] = currentBotIndex + 1;
 
+		logBoard();
 		sendGameUpdate(board, getGameData().getBots()); // send current board to all bots
 
 		Map<BotData, Integer> scores = checkForGameFinished();
@@ -61,9 +64,80 @@ public class TicTacToe extends Game {
 			currentBotIndex = (currentBotIndex + 1) % 2;
 			sendMove();
 		} else { // Game is finished
+			logFinish(scores);
 			sendFinished(scores);
 			resetGame();
 		}
+	}
+
+	private void logInit() {
+		List<BotData> bots = getGameData().getBots();
+		BotData bot1 = bots.get(0);
+		BotData bot2 = bots.get(1);
+
+		String logMessage = """
+				Bot 1: %s (%s)
+				Bot 2: %s (%s)
+				""".formatted(bot1.getName(), bot1.getOwnerName(), bot2.getName(), bot2.getOwnerName());
+
+		sendLog(logMessage);
+	}
+
+	private void logBoard() {
+		BotData bot = getCurrentBot();
+
+		String logMessage = "Bot am Zug: %s (%s) [%d]%n Spielfeld: %n"
+				.formatted(bot.getName(), bot.getOwnerName(), currentBotIndex);
+		if (board.length == 9) {
+			logMessage += """
+					%d %d %d
+					%d %d %d
+					%d %d %d
+					""";
+		} else if (board.length == 25) {
+			logMessage += """
+					%d %d %d %d %d
+					%d %d %d %d %d
+					%d %d %d %d %d
+					%d %d %d %d %d
+					%d %d %d %d %d
+					""";
+		}
+
+		logMessage = logMessage.formatted(Arrays.stream(board).boxed().toArray());
+		sendLog(logMessage);
+	}
+
+	private void logFinish(Map<BotData, Integer> scores) {
+		List<BotData> bots = getGameData().getBots();
+		BotData bot1 = bots.get(0);
+		BotData bot2 = bots.get(1);
+
+		int points1 = scores.get(bot1);
+		int points2 = scores.get(bot2);
+
+		String winnerString;
+		if (points1 > points2) {
+			winnerString = "%s (%s) [1]".formatted(bot1.getName(), bot1.getOwnerName());
+		} else if (points1 < points2) {
+			winnerString = "%s (%s) [2]".formatted(bot2.getName(), bot2.getOwnerName());
+		} else {
+			winnerString = "Unentschieden";
+		}
+
+		String logMessage = """
+				Spiel abgeschlossen!
+				Sieger: %s
+				Punkte:
+				%s (%s) [1] hat %d Punkte
+				%s (%s) [2] hat %d Punkte
+				"""
+				.formatted(winnerString,
+						bot1.getName(), bot1.getOwnerName(), points1,
+						bot2.getName(), bot2.getOwnerName(), points2
+				);
+
+		sendLog(logMessage);
 	}
 
 	@Override
