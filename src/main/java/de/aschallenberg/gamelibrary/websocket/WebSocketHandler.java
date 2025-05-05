@@ -52,6 +52,10 @@ public final class WebSocketHandler extends WebSocketClient {
 			return;
 		}
 
+		if (MessageSender.DEBUG) {
+			log.info("Received: {}", message);
+		}
+
 		switch (message.getPayload()) {
 			case final ErrorPayload payload -> handleError(message, payload);
 			case final BotClientDisconnectPayload payload -> handleBotClientDisconnected(message, payload);
@@ -70,7 +74,7 @@ public final class WebSocketHandler extends WebSocketClient {
 			case final StageFinishedPayload payload -> ignore();
 			case final GameUpdatePayload<?> payload -> handleGameUpdate(message, payload);
 			case final MovePayload<?> payload -> handleMove(message, payload);
-			case final DisqualifyPayload payload -> ignore();
+			case final DisqualifyPayload payload -> handleDisqualify(message, payload);
 			default -> handleUnknownMessage(message);
 		}
 	}
@@ -139,6 +143,18 @@ public final class WebSocketHandler extends WebSocketClient {
 		if (sender != null) {
 			game.onMoveReceived(sender, payload.getValue());
 		}
+	}
+
+	private void handleDisqualify(
+			@NonNull final Message message,
+			@NonNull final DisqualifyPayload payload
+	) {
+		BotData disqualifiedBot = payload.getDisqualifiedBot();
+
+		game.onBotDisqualified(disqualifiedBot);
+
+		log.warn("Bot {} of {} was disqualified because it timed out",
+				disqualifiedBot.getName(), disqualifiedBot.getOwnerName());
 	}
 
 	private void handleUnknownMessage(@NonNull final Message message) {

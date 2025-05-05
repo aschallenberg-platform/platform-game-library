@@ -36,7 +36,6 @@ public class TicTacToe extends Game {
 
 	@Override
 	public void onMoveReceived(final de.aschallenberg.middleware.dto.BotData sender, final Object moveObject) {
-		System.out.println(moveObject);
 		int move = jsonObjectMapper.convertValue(moveObject, Integer.class);
 
 		BotData currentBotData = getCurrentBot();
@@ -48,7 +47,7 @@ public class TicTacToe extends Game {
 		// Check if move valid.
 		int maxMove = board.length - 1;
 		if (move < 0 || move > maxMove || board[move] != 0) {
-			disqualify(currentBotData);
+			disqualifyBot(currentBotData);
 			return;
 		}
 
@@ -73,18 +72,24 @@ public class TicTacToe extends Game {
 	}
 
 	@Override
-	protected void disqualify(final BotData botData) {
+	public void onBotDisqualified(final BotData botData) {
+		disqualify(botData);
+	}
+
+	@Override
+	protected void disqualifyBot(final BotData botData) {
+		super.disqualifyBot(botData);
+		disqualify(botData);
+	}
+
+	private void disqualify(BotData botData) {
 		List<BotData> bots = getGameData().getBots();
 
 		BotData firstBot = bots.get(0);
 		BotData other = firstBot.equals(botData) ? bots.get(1) : firstBot;
+		Map<BotData, Integer> scores = Map.of(botData, 0, other, 2);
 
-		super.disqualify(botData);
-
-		sendFinished(Map.of(
-				botData, 0,
-				other, 2
-		));
+		sendFinished(scores);
 		resetGame();
 	}
 

@@ -114,6 +114,8 @@ public abstract class Game {
 		MessageSender.sendMessage(new GameInterruptPayload());
 	}
 
+	public abstract void onBotDisqualified(BotData botData);
+
 	/**
 	 * Sends a message to the platform indicating that the game has finished.
 	 * <p>
@@ -137,10 +139,8 @@ public abstract class Game {
 	 *
 	 * @param botData The bot to be disqualified.
 	 */
-	protected void disqualify(BotData botData) {
-		if (gameData.getBots().remove(botData)) {
-			MessageSender.sendMessage(new DisqualifyPayload(botData));
-		}
+	protected void disqualifyBot(BotData botData) {
+		MessageSender.sendMessage(new DisqualifyPayload(botData));
 	}
 
 	/**

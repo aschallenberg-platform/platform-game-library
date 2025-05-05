@@ -15,6 +15,8 @@ import java.util.List;
 @Log4j2
 @UtilityClass
 public class MessageSender {
+	public static final boolean DEBUG = false;
+
 	private static final ObjectMapper mapper = new ObjectMapper();
 
 	private static WebSocketHandler webSocketHandler;
@@ -37,7 +39,10 @@ public class MessageSender {
 		}
 
 		webSocketHandler.send(json);
-		log.info("Sent [{}]: {}", message.getPayload().getClass().getSimpleName(), json);
+
+		if (DEBUG) {
+			log.info("Sent: {}", message);
+		}
 	}
 
 	static void setWebSocketHandler(WebSocketHandler webSocketHandler) {
