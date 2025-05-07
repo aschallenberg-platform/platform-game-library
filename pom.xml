@@ -50,7 +50,7 @@
         <dependency>
             <groupId>de.aschallenberg</groupId>
             <artifactId>platform-middleware-java</artifactId>
-            <version>1.1.1</version>
+            <version>1.0.0</version>
         </dependency>
     </dependencies>
 </project>
