@@ -140,7 +140,7 @@ public abstract class Game {
 	 * @param botData The bot to be disqualified.
 	 */
 	protected void disqualifyBot(BotData botData) {
-		MessageSender.sendMessage(new DisqualifyPayload(botData));
+		MessageSender.sendMessage(new DisqualifyPayload(botData), gameData.getBots());
 	}
 
 	/**
@@ -186,7 +186,7 @@ public abstract class Game {
 	 * Logs are important to understand the game flow. For example, log every move or a board status.
 	 * </p>
 	 *
-	 * @param logMessage
+	 * @param logMessage The log message to be sent.
 	 */
 	protected final void sendLog(@NonNull String logMessage) {
 		MessageSender.sendMessage(new LogPayload(logMessage));
