@@ -146,17 +146,14 @@ public class TicTacToe extends Game {
 	}
 
 	@Override
-	public void onBotDisqualified(final BotData botData) {
-		disqualify(botData);
+	public void onBotTimedOut(final BotData botData) {
+		disqualifyBot(botData);
 	}
 
 	@Override
 	protected void disqualifyBot(final BotData botData) {
 		super.disqualifyBot(botData);
-		disqualify(botData);
-	}
 
-	private void disqualify(BotData botData) {
 		List<BotData> bots = getGameData().getBots();
 
 		BotData firstBot = bots.get(0);

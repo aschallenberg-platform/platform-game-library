@@ -114,7 +114,7 @@ public abstract class Game {
 		MessageSender.sendMessage(new GameInterruptPayload());
 	}
 
-	public abstract void onBotDisqualified(BotData botData);
+	public abstract void onBotTimedOut(BotData botData);
 
 	/**
 	 * Sends a message to the platform indicating that the game has finished.
