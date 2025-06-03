@@ -1,11 +1,11 @@
 package de.aschallenberg.gamelibrary;
 
 
+import de.aschallenberg.communication.dto.BotData;
 import de.aschallenberg.gamelibrary.game.Game;
 import de.aschallenberg.gamelibrary.modules.TicTacToe3x3;
 import de.aschallenberg.gamelibrary.modules.TicTacToe5x5;
 import de.aschallenberg.gamelibrary.modules.TicTacToeModule;
-import de.aschallenberg.middleware.dto.BotData;
 import lombok.extern.log4j.Log4j2;
 
 import java.util.Arrays;
@@ -37,7 +37,7 @@ public class TicTacToe extends Game {
 	}
 
 	@Override
-	public void onMoveReceived(final de.aschallenberg.middleware.dto.BotData sender, final Object moveObject) {
+	public void onMoveReceived(final BotData sender, final Object moveObject) {
 		int move = jsonObjectMapper.convertValue(moveObject, Integer.class);
 
 		BotData currentBotData = getCurrentBot();
@@ -141,7 +141,7 @@ public class TicTacToe extends Game {
 	}
 
 	@Override
-	public void onGameUpdateReceived(final de.aschallenberg.middleware.dto.BotData sender, final Object gameUpdateData) {
+	public void onGameUpdateReceived(final BotData sender, final Object gameUpdateData) {
 		// Nothing to do here
 	}
 

@@ -2,10 +2,10 @@ package de.aschallenberg.gamelibrary.websocket;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.aschallenberg.middleware.dto.BotData;
-import de.aschallenberg.middleware.messages.Message;
-import de.aschallenberg.middleware.messages.MessageFactory;
-import de.aschallenberg.middleware.messages.Payload;
+import de.aschallenberg.communication.dto.BotData;
+import de.aschallenberg.communication.messages.Message;
+import de.aschallenberg.communication.messages.MessageFactory;
+import de.aschallenberg.communication.messages.Payload;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import lombok.extern.log4j.Log4j2;

@@ -1,11 +1,11 @@
 package de.aschallenberg.gamelibrary.game;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.aschallenberg.communication.dto.BotData;
+import de.aschallenberg.communication.dto.GameData;
+import de.aschallenberg.communication.messages.Payload;
+import de.aschallenberg.communication.messages.payloads.*;
 import de.aschallenberg.gamelibrary.websocket.MessageSender;
-import de.aschallenberg.middleware.dto.BotData;
-import de.aschallenberg.middleware.dto.GameData;
-import de.aschallenberg.middleware.messages.Payload;
-import de.aschallenberg.middleware.messages.payloads.*;
 import lombok.Getter;
 import lombok.NonNull;
 import org.apache.logging.log4j.LogManager;
