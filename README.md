@@ -52,7 +52,8 @@ Ihre `main`-Methode sollte jetzt in etwa so aussehen:
 
 ```java
 public static void main(String[] args) {
-	GameRegisty.setGameClass( < Deine Hauptklasse >.class);
+	ConfigLoader.load(args);
+	GameRegisty.setGameClass(<Deine Hauptklasse>.class);
 	WebSocketInitiator.initConnection();
 }
 ```
