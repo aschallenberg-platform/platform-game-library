@@ -171,12 +171,6 @@ public class TicTacToe extends Game {
 	}
 
 	private Map<BotData, Integer> checkForGameFinished() {
-		for (int cell : board) {
-			if (cell == 0) {
-				return null; // game still running
-			}
-		}
-
 		List<BotData> bots = getGameData().getBots();
 
 		for (int[] pattern : module.getWinPatterns()) {
@@ -187,6 +181,12 @@ public class TicTacToe extends Game {
 						bots.get(winnerIndex - 1), 2, // Winner gets 2 points
 						bots.get((winnerIndex) % 2), 0 // Loser gets 0 points
 				);
+			}
+		}
+
+		for (int cell : board) {
+			if (cell == 0) {
+				return null; // game still running
 			}
 		}
 
