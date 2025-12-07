@@ -2,7 +2,7 @@
 
 ## Einbinden
 
-Füge folgende dependency in die pom.xml deines Maven Projekts hinzu:
+Fügen Sie folgende Dependency in die pom.xml Ihres Maven-Projekts ein:
 
 ```xml
 
@@ -13,52 +13,55 @@ Füge folgende dependency in die pom.xml deines Maven Projekts hinzu:
 </dependency>
 ```
 
-Beachte, dass die Library Java 21 benutzt.
+Beachten Sie, dass die Library Java 21 verwendet.
 
 ## Anfangen das Spiel zu schreiben
 
-Du brauchst primär drei Dinge um ein Spiel zu schreiben: eine main-Methode, eine (Haupt-)Klasse für dein Spiel und eine
-config-Datei.
+Sie benötigen primär drei Dinge, um ein Spiel zu schreiben: eine main-Methode, eine (Haupt-)Klasse für Ihr Spiel und eine Konfigurationsdatei.
 
 ## config-Datei
 
-Die config-Datei musst du als `config.properties` in `src/main/resources` anlegen. Sie muss folgendes beinhalten:
+Die config-Datei müssen Sie als `config.properties` in `src/main/resources` anlegen. Sie muss Folgendes beinhalten:
 
 ```
-platform.host=<IP-Adresse der Platform zu der du dich verbinden möchtest>
-platform.port=<Port der Plattform zu der du dich verbinden möchtest>
-platform.game.token=<Der Game-Implementation-Token, für das Spiel, was du implementieren möchtest>
+platform.host=<IP-Adresse der Plattform, zu der Sie sich verbinden möchten>
+platform.port=<Port der Plattform, zu der Sie sich verbinden möchten>
+platform.game.token=<Der Game-Implementation-Token für das Spiel, das Sie implementieren möchten>
 ```
 
 ## (Haupt-)Klasse
-
-Du musst eine Klasse für deinen Bot anlegen, die von `de.aschallenberg.gamelibrary.game.Game` erben muss. Du wirst
-einige Methoden implementieren müssen. Sie sind die Schnittstelle zur Plattform und zu den Bots, die auf deinen
-Spielservern spielen werden.
+Sie müssen eine Klasse für Ihr Spiel anlegen, die von `de.aschallenberg.gamelibrary.game.Game` erbt. Sie werden einige Methoden implementieren müssen. Diese stellen die Schnittstelle zur Plattform und zu den Bots dar, die auf Ihren Spielservern spielen werden.
 
 ## main-Methode
 
-Dein Programm braucht eine main-Methode. Ich empfehle, diese in einer eigenen Klasse `Main` anzulegen, du kannst sie
-aber auch überall anders implementieren. Wichtig ist, dass du deine Hauptklasse registrierst. Das machst du mit
-`GameRegisty.setGameClass(<Deine Hauptklasse>.class)`. **Danach** musst du die Library dazu auffordern, eine WebSocket-
-Verbindung zur Plattform aufzubauen. Dies funktioniert mit dem Befehl `WebSocketInitiator.initConnection()`.
-Deine main- Methode sollte jetzt in etwa so aussehen:
+
+
+Ihr Programm benötigt eine `main`-Methode. Es wird empfohlen, diese in einer eigenen Klasse `Main` anzulegen. Sie können sie jedoch auch an anderer Stelle implementieren. Zunächst muss die Konfigurationsdatei geladen werden. Dies geschieht mit:
+```java
+ConfigLoader.load(args);
+```
+Wichtig ist auch, dass Sie Ihre Hauptklasse registrieren. Das machen Sie mit:
+```java
+GameRegisty.setGameClass(<Deine Hauptklasse>.class);
+```
+**Danach** müssen Sie die Library dazu auffordern, eine WebSocket-Verbindung zur Plattform aufzubauen. Dies funktioniert mit dem Befehl:
+```java
+WebSocketInitiator.initConnection();
+```
+Ihre `main`-Methode sollte jetzt in etwa so aussehen:
 
 ```java
 public static void main(String[] args) {
-	GameRegisty.setGameClass( < Deine Hauptklasse >.class);
+	ConfigLoader.load(args);
+	GameRegisty.setGameClass(<Deine Hauptklasse>.class);
 	WebSocketInitiator.initConnection();
 }
 ```
 
-Wenn du alle drei Komponenten hast und korrekt konfiguriert hast, dann sollte das Spiel beim Starten eine WebSocket-
-Verbindung zur Plattform aufbauen und sich dort registrieren. Du solltest dann in der Konsole etwas sehen wie
-"Successfully registered". Das Spiel bzw, die Module und Versionen davon, die du unterstützt, haben jetzt eine Instanz
-mehr online und du es wird automatisch zum Spielen bereitgestellt. Jedoch wird deine Spiel-Implementierung noch zu
-Fehlern führen, da du sie bis jetzt noch nicht implementiert hast.
+Wenn Sie alle drei Komponenten haben und diese korrekt konfiguriert sind, sollte das Spiel beim Starten eine WebSocket-Verbindung zur Plattform aufbauen und sich dort registrieren. Sie sollten dann in der Konsole etwas sehen wie
+„Successfully registered“. Das Spiel bzw. die Module und Versionen davon, die Sie unterstützen, haben jetzt eine Instanz mehr online und es wird automatisch zum Spielen bereitgestellt.
+Jedoch wird Ihre Spiel-Implementierung noch zu Fehlern führen, da Sie diese bis jetzt noch nicht implementiert haben.
 
 ## Implementierung
 
-Die von `Game` überschriebenen Methoden musst du jetzt implementieren. Achte darauf, dass du Ein- und Ausgabe-Klassen
-(also die Typen von Objekten, die du erwarten kannst und die du versendest) genau auf die Voraussetzungen des Spiels
-abstimmst. Ansonsten wird dein Code zu Fehlern führen.
+Die von `Game` überschriebenen Methoden müssen Sie nun implementieren. Achten Sie darauf, dass Sie Ein- und Ausgabe-Klassen (also die Typen von Objekten, die Sie erwarten können und die Sie versenden) genau auf die Voraussetzungen des Spiels abstimmen. Andernfalls wird Ihr Code zu Fehlern führen.
